@@ -1,0 +1,120 @@
+<html>
+<head>
+  <title>GeekLub (>//////)> </title>
+  <meta http-equiv="content-type" content="text/heml; charet=utf-8"/>
+  <link rel="stylesheet" href="css/style.css" type="text/css"/>
+  <script src="js/jquery.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+  <script src="js/timeLineAjax.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+  <script>
+  var curPage = 0;
+  var isAnimating = false;
+  //logo界面切换
+  var scrollFunc = function (e) {
+    if (!isAnimating){
+    var delta;
+    if (e.wheelDelta) {
+        delta = e.wheelDelta;
+    } else if (e.detail) {
+        delta = e.detail;
+    }
+    if (curPage==0){
+    if (delta<0) {
+      $('.time_container').show()
+      isAnimating = true;
+      curPage=1;
+      __showNewData(curPage);
+    $('body').stop().animate({'scrollTop':$('.main').height()+'px'},300,
+    function(){  $('.main').hide();window.scroll(0,0);});
+    }
+    }else{
+      if (delta>0){
+        if (curPage == 1){
+        $('.main').show();
+        window.scroll(0,$('.main').height());
+        isAnimating = true;
+       $('body').stop().animate({'scrollTop':'0px'},300,
+      function(){
+        curPage=0;
+        window.scroll(0,0);
+        $('.time_container').hide();
+        $("#timeC").html("");
+        $("#time_content_title").html("");
+        $("#time_content_content").html("");
+        isAnimating=false;
+      });
+    }else{
+        isAnimating = true;
+      curPage -= 1;
+      __showNewData(curPage);
+    }
+    }else{
+        isAnimating = true;
+        curPage += 1;
+      __showNewData(curPage);
+    }
+    }
+  }
+  }
+  if (document.addEventListener) {
+      document.addEventListener('DOMMouseScroll', scrollFunc, false);
+  }
+  window.onmousewheel = document.onmousewheel = scrollFunc;
+  function __showNewData (pageId){
+    if (pageId != 0) {
+      $.ajax({ url: "/CMS/getData.php?start=" + (pageId-1) + "&count=1" ,success: function(data){
+          var obj = eval ("("+data+")");
+          if (obj.code == "-1") {
+            curPage -= 1;
+            alert("no more data");
+            isAnimating = false;
+          }else if (obj.code == "1"){
+          var m = eval (obj.content)[0];
+
+          $(".pageIdShower").html(pageId);
+          $(".mainContainer").animate({"opacity":"0"},400,function(){
+              $("#time_content_title").html(m.title);
+              $("#time_content_content").html(m.content);
+              $("#timeC").html(m.time);
+                $(".mainContainer").animate({"opacity":"1"},400,function(){isAnimating=false;});
+          });
+          $(".timeTag").animate({"margin-top":"-170px"},300,function(){
+            $("#timeC").html("111");
+            $(".timeTag").css("margin-top","100%");
+            $(".timeTag").animate({"margin-top":"20px"},300);
+          })
+      }else {
+        alert("other error");
+      }
+    }});
+    }
+  }
+</script>
+</head>
+<body style="overflow-x: hidden;overflow-y: hidden;">
+  <div class="main">
+    <div class="icon_container">
+      <img src="img/SELECT 'DATA' FROM 'GEEKLUB'.jpg" class="icon"/>
+      <img src="img/SELECT ARROW FROM IMG.png" class="hint"/>
+      <!--
+      <img src="img/drug.gif" class="drug"/> 胖友，吸毒么
+      -->
+    </div>
+  </div>
+  <div class="time_devider2"></div>
+  <div class="time_container">
+    <div class="timeLeft">
+      <div class="timeTag">
+        <h1 id="timeC"></span>
+      </div>
+    </div>
+    <div class="timeRight">
+      <div class="pageIdShower">123</div>
+      <div class="mainContainer">
+      <h1 id="time_content_title"></h1>
+      <span id="time_content_content"></span>
+    </div>
+    </div>
+    <div class="time_devider"></div>
+  </div>
+</body>
+</html>
