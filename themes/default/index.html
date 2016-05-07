@@ -4,10 +4,10 @@
   <meta http-equiv="content-type" content="text/heml; charet=utf-8"/>
   <link rel="stylesheet" href="css/style.css" type="text/css"/>
   <script src="js/jquery.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
-  <script src="js/timeLineAjax.js" type="text/javascript" language="javascript" charset="utf-8"></script>
   <script>
   var curPage = 0;
   var isAnimating = false;
+  var maxPageId = 199;
   //logo界面切换
   var scrollFunc = function (e) {
     if (!isAnimating){
@@ -29,26 +29,14 @@
     }else{
       if (delta>0){
         if (curPage == 1){
-        $('.main').show();
-        window.scroll(0,$('.main').height());
-        isAnimating = true;
-       $('body').stop().animate({'scrollTop':'0px'},300,
-      function(){
-        curPage=0;
-        window.scroll(0,0);
-        $('.time_container').hide();
-        $("#timeC").html("");
-        $("#time_content_title").html("");
-        $("#time_content_content").html("");
-        isAnimating=false;
-      });
+          showMainPage();
     }else{
-        isAnimating = true;
-      curPage -= 1;
+        startLoading();
+        curPage -= 1;
       __showNewData(curPage);
     }
     }else{
-        isAnimating = true;
+        startLoading();
         curPage += 1;
       __showNewData(curPage);
     }
@@ -59,14 +47,76 @@
       document.addEventListener('DOMMouseScroll', scrollFunc, false);
   }
   window.onmousewheel = document.onmousewheel = scrollFunc;
+  var toastShowing = false;
+  function hideToast()
+  {
+  toastShowing = false;
+  var alert = document.getElementById("toast");
+  $(alert).css({"bottom":"-300px"});
+  }
+  function drawToast(message)
+  {
+  if (!toastShowing){
+  var alert = document.getElementById("toast");
+  if (alert == null)
+  {
+  var toastHTML = '<div id="toast">' + message + '</div>';
+  document.body.insertAdjacentHTML('beforeEnd', toastHTML);
+  }
+  else
+  {
+    $(alert).css({"bottom":"0"});
+  }
+  setTimeout(hideToast,1500);
+  toastShowing = true;
+  $(alert).click(function(){
+    if (toastShowin)
+    hideToast();
+  });
+}
+  }
+
+  $(document).ready(function(){
+  $(".pageIdShower").hover(function(){
+      $(".pageIdShower").html("\u21E1");
+    },function (){
+      $(".pageIdShower").html(curPage);
+    });
+    showMainPage();
+    $(".pageIdShower").click(showMainPage);
+  });
+  function showMainPage (){
+    $('.main').show();
+    window.scroll(0,$('.main').height());
+    isAnimating = true;
+   $('body').stop().animate({'scrollTop':'0px'},300,
+  function(){
+    curPage=0;
+    window.scroll(0,0);
+    $('.time_container').hide();
+    $("#timeC").html("");
+    $("#time_content_title").html("");
+    $("#time_content_content").html("");
+    isAnimating=false;
+  });
+  }
+  function startLoading (){
+    isAnimating = true;
+    $(".spinner").css({"opacity":"1"});
+  }
+  function endLoading (){
+    $(".spinner").css({"opacity":"0"});
+    isAnimating = false;
+  }
   function __showNewData (pageId){
-    if (pageId != 0) {
+    if (pageId != 0&&pageId< maxPageId) {
       $.ajax({ url: "/CMS/getData.php?start=" + (pageId-1) + "&count=1" ,success: function(data){
           var obj = eval ("("+data+")");
           if (obj.code == "-1") {
+            maxPageId = curPage;
             curPage -= 1;
-            alert("no more data");
-            isAnimating = false;
+            drawToast("no more data");
+            endLoading();
           }else if (obj.code == "1"){
           var m = eval (obj.content)[0];
 
@@ -74,19 +124,24 @@
           $(".mainContainer").animate({"opacity":"0"},400,function(){
               $("#time_content_title").html(m.title);
               $("#time_content_content").html(m.content);
-              $("#timeC").html(m.time);
-                $(".mainContainer").animate({"opacity":"1"},400,function(){isAnimating=false;});
-          });
+                $(".mainContainer").animate({"opacity":"1"},400,endLoading);
+              });
           $(".timeTag").animate({"margin-top":"-170px"},300,function(){
-            $("#timeC").html("111");
+            $("#timeC").html(m.time);
             $(".timeTag").css("margin-top","100%");
             $(".timeTag").animate({"margin-top":"20px"},300);
           })
       }else {
-        alert("other error");
+        drawToast("Other error");
+        curPage -= 1;
+        endLoading();
       }
     }});
-    }
+  }else {
+    curPage -= 1;
+    drawToast("no more data");
+    isAnimating = false;
+  }
   }
 </script>
 </head>
@@ -106,9 +161,14 @@
       <div class="timeTag">
         <h1 id="timeC"></span>
       </div>
+      <div class="spinner">
+      <div class="bounce1"></div>
+      <div class="bounce2"></div>
+      <div class="bounce3"></div>
+    </div>
     </div>
     <div class="timeRight">
-      <div class="pageIdShower">123</div>
+      <div class="pageIdShower">-</div>
       <div class="mainContainer">
       <h1 id="time_content_title"></h1>
       <span id="time_content_content"></span>

@@ -25,7 +25,7 @@
         $rs = mysql_query($q, $conn);
         if(!$rs){die("html");}
         $row = mysql_fetch_row($rs);
-        echo ((count($row)==0||$row[0]=="")?"html":$row[0])."/";
+        echo ((count($row)==0||$row[0]=="")?"default":$row[0])."/";
         mysql_free_result($rs);
     ?>"  width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>
 </body>
